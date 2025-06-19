@@ -17,6 +17,7 @@ import {
   Globe
 } from 'lucide-react';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
+import { ModeToggle } from '@/components/mode-toggle';
 
 export default function HomePage() {
   const router = useRouter();
@@ -116,7 +117,7 @@ export default function HomePage() {
                     총 서버: <span className="font-medium text-foreground">{servers.length}</span>
                   </div>
                   <div className="text-muted-foreground">
-                    온라인: <span className="font-medium text-green-600">
+                    온라인: <span className="font-medium text-green-600 dark:text-green-400">
                       {servers.filter(s => s.status === 'online').length}
                     </span>
                   </div>
@@ -134,28 +135,31 @@ export default function HomePage() {
             <SearchBox />
           </div>
 
-          <motion.div
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            transition={{ duration: 0.2 }}
-          >
-            <Button 
-              onClick={handleRegisterServer}
-              className="gap-2 transition-all duration-200"
+          <div className="flex items-center gap-3">
+            <ModeToggle />
+            <motion.div
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              transition={{ duration: 0.2 }}
             >
-              <Plus className="h-4 w-4" />
-              서버 등록
-            </Button>
-          </motion.div>
+              <Button 
+                onClick={handleRegisterServer}
+                className="gap-2 transition-all duration-200"
+              >
+                <Plus className="h-4 w-4" />
+                서버 등록
+              </Button>
+            </motion.div>
+          </div>
         </div>
       </header>
 
       {/* Main Content */}
       <main className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {error && (
-          <Card className="mb-6 border-red-200 bg-red-50">
+          <Card className="mb-6 border-destructive/50 bg-destructive/10">
             <CardContent className="pt-6">
-              <p className="text-red-800">오류: {error}</p>
+              <p className="text-destructive">오류: {error}</p>
             </CardContent>
           </Card>
         )}
@@ -167,27 +171,27 @@ export default function HomePage() {
                 <CardHeader className="space-y-3">
                   <div className="flex items-start justify-between">
                     <div className="flex items-center space-x-2 flex-1">
-                      <div className="w-3 h-3 bg-gray-200 rounded-full"></div>
-                      <div className="h-5 bg-gray-200 rounded w-40"></div>
+                      <div className="w-3 h-3 bg-muted rounded-full"></div>
+                      <div className="h-5 bg-muted rounded w-40"></div>
                     </div>
                   </div>
                   <div className="flex items-center justify-between">
-                    <div className="h-6 bg-gray-200 rounded w-24"></div>
-                    <div className="h-4 bg-gray-200 rounded w-16"></div>
+                    <div className="h-6 bg-muted rounded w-24"></div>
+                    <div className="h-4 bg-muted rounded w-16"></div>
                   </div>
                   <div className="space-y-2">
-                    <div className="h-4 bg-gray-200 rounded"></div>
-                    <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                    <div className="h-4 bg-muted rounded"></div>
+                    <div className="h-4 bg-muted rounded w-3/4"></div>
                   </div>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="h-4 bg-gray-200 rounded w-2/3"></div>
+                  <div className="h-4 bg-muted rounded w-2/3"></div>
                   <div className="flex gap-1">
-                    <div className="h-6 bg-gray-200 rounded w-16"></div>
-                    <div className="h-6 bg-gray-200 rounded w-20"></div>
-                    <div className="h-6 bg-gray-200 rounded w-12"></div>
+                    <div className="h-6 bg-muted rounded w-16"></div>
+                    <div className="h-6 bg-muted rounded w-20"></div>
+                    <div className="h-6 bg-muted rounded w-12"></div>
                   </div>
-                  <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+                  <div className="h-4 bg-muted rounded w-1/2"></div>
                 </CardContent>
               </Card>
             ))}

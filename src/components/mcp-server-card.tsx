@@ -71,7 +71,7 @@ export function MCPServerCard({ server, onShowDetails }: MCPServerCardProps) {
             </div>
             
             {server.actualEndpoint && server.actualEndpoint !== server.endpoint && (
-              <div className="flex items-center space-x-2 text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded border border-blue-200">
+              <div className="flex items-center space-x-2 text-xs text-primary bg-primary/10 px-2 py-1 rounded border border-primary/20">
                 <span>↩️ 리다이렉션:</span>
                 <span className="truncate font-mono">{server.actualEndpoint}</span>
               </div>
@@ -99,12 +99,12 @@ export function MCPServerCard({ server, onShowDetails }: MCPServerCardProps) {
               </div>
               <div className="flex flex-wrap gap-1">
                 {server.tools.slice(0, 4).map((tool) => (
-                  <Badge key={tool} variant="outline" className="text-xs bg-blue-50 text-blue-700 border-blue-200">
+                  <Badge key={tool} variant="outline" className="text-xs bg-secondary text-secondary-foreground">
                     {tool}
                   </Badge>
                 ))}
                 {server.tools.length > 4 && (
-                  <Badge variant="outline" className="text-xs bg-blue-50 text-blue-700 border-blue-200">
+                  <Badge variant="outline" className="text-xs bg-secondary text-secondary-foreground">
                     +{server.tools.length - 4}
                   </Badge>
                 )}

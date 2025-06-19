@@ -224,7 +224,7 @@ export function ServerRegistrationForm({ onSuccess, onCancel }: ServerRegistrati
                   <button
                     type="button"
                     onClick={() => removeTag(tag)}
-                    className="hover:text-red-500"
+                    className="hover:text-destructive"
                   >
                     <X className="h-3 w-3" />
                   </button>
@@ -234,23 +234,23 @@ export function ServerRegistrationForm({ onSuccess, onCancel }: ServerRegistrati
           )}
           
           {form.formState.errors.tags && (
-            <p className="text-sm text-red-600">
+            <p className="text-sm text-destructive">
               {form.formState.errors.tags.message}
             </p>
           )}
         </div>
 
-        <Card className="bg-blue-50 border-blue-200">
+        <Card className="bg-muted/50 border-muted">
           <CardContent className="pt-4">
-            <div className="text-sm text-blue-800">
-              <p className="font-medium mb-2">🔄 등록 후 백그라운드에서 자동 실행:</p>
-              <ul className="list-disc list-inside space-y-1 text-blue-700">
+            <div className="text-sm">
+              <p className="font-medium mb-2 text-foreground">🔄 등록 후 백그라운드에서 자동 실행:</p>
+              <ul className="list-disc list-inside space-y-1 text-muted-foreground">
                 <li><strong>헬스체크</strong>: 서버 연결 상태 확인 (HTTP/WebSocket 응답)</li>
                 <li><strong>리다이렉션 처리</strong>: 307/301/302 응답 자동 감지 및 처리</li>
                 <li><strong>도구 수집</strong>: 사용 가능한 MCP 도구 목록 자동 수집</li>
                 <li><strong>상태 업데이트</strong>: 실시간 서버 상태 모니터링 시작</li>
               </ul>
-              <p className="mt-2 text-xs text-blue-600">
+              <p className="mt-2 text-xs text-muted-foreground">
                 💡 등록 즉시 서버 카드가 표시되며, 백그라운드에서 상태가 업데이트됩니다.<br/>
                 ↩️ HTTP 리다이렉션이 감지되면 실제 작동하는 URL이 표시됩니다.
               </p>

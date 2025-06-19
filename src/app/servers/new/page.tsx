@@ -7,6 +7,7 @@ import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ServerRegistrationForm } from '@/components/server-registration-form';
+import { ModeToggle } from '@/components/mode-toggle';
 
 export default function NewServerPage() {
   const router = useRouter();
@@ -20,7 +21,7 @@ export default function NewServerPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
+    <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-8 max-w-4xl">
         {/* 헤더 */}
         <motion.div
@@ -29,7 +30,7 @@ export default function NewServerPage() {
           transition={{ duration: 0.3 }}
           className="mb-8"
         >
-          <div className="flex items-center gap-4 mb-4">
+          <div className="flex items-center justify-between mb-4">
             <Button
               variant="ghost"
               size="sm"
@@ -39,13 +40,14 @@ export default function NewServerPage() {
               <ArrowLeft className="w-4 h-4" />
               뒤로가기
             </Button>
+            <ModeToggle />
           </div>
           
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">
+            <h1 className="text-3xl font-bold text-foreground mb-2">
               새 MCP 서버 등록
             </h1>
-            <p className="text-gray-600">
+            <p className="text-muted-foreground">
               새로운 Model Context Protocol 서버를 카탈로그에 추가하세요
             </p>
           </div>

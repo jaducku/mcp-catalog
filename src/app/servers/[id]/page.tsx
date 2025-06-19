@@ -13,6 +13,7 @@ import { useMCPStore } from '@/store/mcp-store';
 import { ServerStatusBadge } from '@/components/atoms/server-status-badge';
 import { toast } from 'sonner';
 import { MCPServer } from '@/types/mcp';
+import { ModeToggle } from '@/components/mode-toggle';
 
 interface ServerDetailPageProps {
   params: Promise<{
@@ -46,9 +47,9 @@ export default function ServerDetailPage({ params }: ServerDetailPageProps) {
 
   if (!server) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">서버를 찾을 수 없습니다</h1>
+          <h1 className="text-2xl font-bold text-foreground mb-4">서버를 찾을 수 없습니다</h1>
           <Button onClick={() => router.push('/')}>
             홈으로 돌아가기
           </Button>
@@ -139,7 +140,7 @@ export default function ServerDetailPage({ params }: ServerDetailPageProps) {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
+    <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-8 max-w-6xl">
         {/* 헤더 */}
         <motion.div
@@ -148,7 +149,7 @@ export default function ServerDetailPage({ params }: ServerDetailPageProps) {
           transition={{ duration: 0.3 }}
           className="mb-8"
         >
-          <div className="flex items-center gap-4 mb-6">
+          <div className="flex items-center justify-between mb-6">
             <Button
               variant="ghost"
               size="sm"
@@ -158,14 +159,15 @@ export default function ServerDetailPage({ params }: ServerDetailPageProps) {
               <ArrowLeft className="w-4 h-4" />
               뒤로가기
             </Button>
+            <ModeToggle />
           </div>
           
           <div className="flex items-start justify-between flex-wrap gap-4">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">
+              <h1 className="text-3xl font-bold text-foreground mb-2">
                 {server.name}
               </h1>
-              <p className="text-gray-600 text-lg">
+              <p className="text-muted-foreground text-lg">
                 {server.description}
               </p>
             </div>
@@ -200,20 +202,20 @@ export default function ServerDetailPage({ params }: ServerDetailPageProps) {
                   <div>
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center gap-2">
-                        <label className="text-sm font-medium text-gray-500">엔드포인트</label>
-                        <ExternalLink className="w-4 h-4 text-gray-400" />
+                        <label className="text-sm font-medium text-muted-foreground">엔드포인트</label>
+                        <ExternalLink className="w-4 h-4 text-muted-foreground" />
                       </div>
                       <Button
                         variant="ghost"
                         size="sm"
                         onClick={() => copyToClipboard(server.endpoint, '엔드포인트 URL')}
-                        className="h-6 px-2 text-xs hover:bg-gray-200"
+                        className="h-6 px-2 text-xs"
                       >
                         <Copy className="w-3 h-3 mr-1" />
                         복사
                       </Button>
                     </div>
-                    <code className="text-sm bg-gray-100 px-2 py-1 rounded font-mono block">
+                    <code className="text-sm bg-muted px-2 py-1 rounded font-mono block">
                       {server.endpoint}
                     </code>
                   </div>
@@ -222,51 +224,51 @@ export default function ServerDetailPage({ params }: ServerDetailPageProps) {
                     <div>
                       <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center gap-2">
-                          <label className="text-sm font-medium text-blue-600">실제 연결 URL</label>
+                          <label className="text-sm font-medium text-primary">실제 연결 URL</label>
                           <span className="text-sm">↩️</span>
                         </div>
                         <Button
                           variant="ghost"
                           size="sm"
                           onClick={() => copyToClipboard(server.actualEndpoint!, '실제 연결 URL')}
-                          className="h-6 px-2 text-xs hover:bg-blue-200"
+                          className="h-6 px-2 text-xs"
                         >
-                          <Copy className="w-3 h-3 mr-1 text-blue-600" />
-                          <span className="text-blue-600">복사</span>
+                          <Copy className="w-3 h-3 mr-1 text-primary" />
+                          <span className="text-primary">복사</span>
                         </Button>
                       </div>
-                      <code className="text-sm bg-blue-50 px-2 py-1 rounded font-mono text-blue-800 block">
+                      <code className="text-sm bg-primary/10 px-2 py-1 rounded font-mono text-primary block border border-primary/20">
                         {server.actualEndpoint}
                       </code>
                     </div>
                   )}
                   
                   <div>
-                    <label className="text-sm font-medium text-gray-500 mb-2 block">연결 타입</label>
-                    <p className="text-sm text-gray-700">
+                    <label className="text-sm font-medium text-muted-foreground mb-2 block">연결 타입</label>
+                    <p className="text-sm text-foreground">
                       {typeInfo.description}
                     </p>
                   </div>
 
                   <div>
                     <div className="flex items-center justify-between mb-2">
-                      <label className="text-sm font-medium text-gray-500">환경설정</label>
+                      <label className="text-sm font-medium text-muted-foreground">환경설정</label>
                       <Button
                         variant="ghost"
                         size="sm"
                         onClick={() => copyToClipboard(generateMCPConfig(server), 'MCP 환경설정')}
-                        className="h-6 px-2 text-xs hover:bg-gray-200"
+                        className="h-6 px-2 text-xs"
                       >
                         <Copy className="w-3 h-3 mr-1" />
                         복사
                       </Button>
                     </div>
                     <div className="relative">
-                      <pre className="text-xs bg-gray-900 text-gray-100 p-3 rounded-lg overflow-x-auto font-mono leading-relaxed">
+                      <pre className="text-xs bg-muted text-muted-foreground p-3 rounded-lg overflow-x-auto font-mono leading-relaxed border">
                         <code>{generateMCPConfig(server)}</code>
                       </pre>
                     </div>
-                    <p className="text-xs text-gray-500 mt-2">
+                    <p className="text-xs text-muted-foreground mt-2">
                       이 설정을 MCP 클라이언트의 설정 파일에 추가하세요 (예: ~/.cursor/mcp.json)
                     </p>
                   </div>
@@ -299,31 +301,31 @@ export default function ServerDetailPage({ params }: ServerDetailPageProps) {
                           <AccordionItem 
                             key={tool} 
                             value={`tool-${index}`}
-                            className="border border-blue-200 rounded-lg px-4 bg-blue-50/50"
+                            className="border border-primary/20 rounded-lg px-4 bg-primary/5"
                           >
                             <AccordionTrigger className="hover:no-underline py-3">
                               <div className="flex items-center gap-2">
-                                <Wrench className="w-4 h-4 text-blue-600" />
-                                <span className="font-medium text-blue-900">{tool}</span>
+                                <Wrench className="w-4 h-4 text-primary" />
+                                <span className="font-medium text-primary">{tool}</span>
                               </div>
                             </AccordionTrigger>
                             <AccordionContent className="pb-4">
                               <div className="space-y-3 pt-2">
                                 <div>
-                                  <h4 className="text-sm font-medium text-gray-700 mb-1">설명</h4>
-                                  <p className="text-sm text-gray-600 leading-relaxed">
+                                  <h4 className="text-sm font-medium text-foreground mb-1">설명</h4>
+                                  <p className="text-sm text-muted-foreground leading-relaxed">
                                     {toolInfo.description}
                                   </p>
                                 </div>
                                 
                                 {toolInfo.parameters && toolInfo.parameters.length > 0 && (
                                   <div>
-                                    <h4 className="text-sm font-medium text-gray-700 mb-2">매개변수</h4>
+                                    <h4 className="text-sm font-medium text-foreground mb-2">매개변수</h4>
                                     <ul className="space-y-1">
                                       {toolInfo.parameters.map((param, paramIndex) => (
-                                        <li key={paramIndex} className="text-sm text-gray-600 flex items-start gap-2">
-                                          <span className="text-blue-600 mt-1">•</span>
-                                          <code className="bg-gray-100 px-1.5 py-0.5 rounded text-xs font-mono flex-1">
+                                        <li key={paramIndex} className="text-sm text-muted-foreground flex items-start gap-2">
+                                          <span className="text-primary mt-1">•</span>
+                                          <code className="bg-muted px-1.5 py-0.5 rounded text-xs font-mono flex-1">
                                             {param}
                                           </code>
                                         </li>
@@ -359,15 +361,15 @@ export default function ServerDetailPage({ params }: ServerDetailPageProps) {
                   <CardContent className="space-y-3">
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                       <div>
-                        <label className="text-sm font-medium text-gray-500">서버 이름</label>
+                        <label className="text-sm font-medium text-muted-foreground">서버 이름</label>
                         <p className="text-sm font-mono mt-1">{server.serverInfo.name}</p>
                       </div>
                       <div>
-                        <label className="text-sm font-medium text-gray-500">버전</label>
+                        <label className="text-sm font-medium text-muted-foreground">버전</label>
                         <p className="text-sm font-mono mt-1">{server.serverInfo.version}</p>
                       </div>
                       <div>
-                        <label className="text-sm font-medium text-gray-500">프로토콜 버전</label>
+                        <label className="text-sm font-medium text-muted-foreground">프로토콜 버전</label>
                         <p className="text-sm font-mono mt-1">{server.serverInfo.protocolVersion}</p>
                       </div>
                     </div>
@@ -419,14 +421,14 @@ export default function ServerDetailPage({ params }: ServerDetailPageProps) {
                 </CardHeader>
                 <CardContent className="space-y-3">
                   <div>
-                    <label className="text-sm font-medium text-gray-500">등록일</label>
+                    <label className="text-sm font-medium text-muted-foreground">등록일</label>
                     <p className="text-sm mt-1">
                       {new Date(server.created_at).toLocaleString('ko-KR')}
                     </p>
                   </div>
                   <Separator />
                   <div>
-                    <label className="text-sm font-medium text-gray-500">마지막 업데이트</label>
+                    <label className="text-sm font-medium text-muted-foreground">마지막 업데이트</label>
                     <p className="text-sm mt-1">
                       {new Date(server.updated_at).toLocaleString('ko-KR')}
                     </p>
