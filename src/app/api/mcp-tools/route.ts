@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { config, createApiUrls } from '@/lib/config';
 
 export async function POST(request: NextRequest) {
   try {
@@ -12,13 +13,15 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 8080포트 API로 요청 전달
-    const response = await fetch('http://192.168.219.115:8080/tools', {
+    // 환경변수로 설정된 도구 API URL 사용
+    const toolsApiUrl = createApiUrls.tools();
+    const response = await fetch(toolsApiUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({ url }),
+      signal: AbortSignal.timeout(config.healthCheckTimeout),
     });
 
     if (!response.ok) {

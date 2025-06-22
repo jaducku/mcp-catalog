@@ -1,0 +1,45 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mcp-catalog-config
+  namespace: default
+  labels:
+    app: mcp-catalog
+    component: config
+data:
+  # MCP API 엔드포인트 설정
+  NEXT_PUBLIC_HEALTH_CHECK_API_URL: "http://mcp-health-check-service:8080"
+  NEXT_PUBLIC_TOOLS_API_URL: "http://mcp-tools-service:8080"
+  
+  # 타임아웃 및 재시도 설정  
+  NEXT_PUBLIC_HEALTH_CHECK_TIMEOUT: "15000"
+  NEXT_PUBLIC_HEALTH_CHECK_RETRIES: "3"
+  NEXT_PUBLIC_WEBSOCKET_TIMEOUT: "15000"
+  
+  # 애플리케이션 설정
+  NEXT_PUBLIC_DEBUG: "false"
+  NODE_ENV: "production"
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mcp-catalog-dev-config
+  namespace: default
+  labels:
+    app: mcp-catalog
+    component: config
+    environment: development
+data:
+  # 개발 환경용 설정
+  NEXT_PUBLIC_HEALTH_CHECK_API_URL: "http://localhost:8080"
+  NEXT_PUBLIC_TOOLS_API_URL: "http://localhost:8080"
+  
+  # 개발 환경에서는 타임아웃을 짧게 설정
+  NEXT_PUBLIC_HEALTH_CHECK_TIMEOUT: "5000"
+  NEXT_PUBLIC_HEALTH_CHECK_RETRIES: "2"
+  NEXT_PUBLIC_WEBSOCKET_TIMEOUT: "5000"
+  
+  # 디버그 모드 활성화
+  NEXT_PUBLIC_DEBUG: "true"
+  NODE_ENV: "development" 

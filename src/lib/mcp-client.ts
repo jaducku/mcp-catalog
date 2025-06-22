@@ -9,6 +9,7 @@ import {
   MCPConnectionError,
   MCPProtocolError
 } from '@/types/mcp-protocol';
+import { config, validateConfig } from '@/lib/config';
 
 export interface MCPHealthCheckResult {
   isHealthy: boolean;
@@ -33,6 +34,11 @@ export async function performHealthCheck(
   endpoint: string, 
   type: ServerType
 ): Promise<MCPHealthCheckResult> {
+  // 환경변수 검증
+  if (config.debugMode) {
+    validateConfig();
+  }
+  
   const startTime = Date.now();
   
   try {
@@ -413,7 +419,7 @@ async function checkMCPWebSocketHealth(endpoint: string): Promise<MCPHealthCheck
             error: 'MCP WebSocket connection timeout'
           });
         }
-      }, 10000);
+      }, config.websocketTimeout);
       
       ws.onopen = () => {
         // MCP initialize 요청 전송

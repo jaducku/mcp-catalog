@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
 import { ThemeProvider } from "@/components/theme-provider";
+import { validateConfig } from "@/lib/config";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -20,6 +21,11 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // 서버 사이드에서 환경변수 검증
+  if (typeof window === 'undefined') {
+    validateConfig();
+  }
+
   return (
     <html lang="ko" suppressHydrationWarning>
       <body className={`${inter.variable} font-sans antialiased`}>
