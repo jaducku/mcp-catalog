@@ -85,7 +85,18 @@ export default function ServerDetailPage({ params }: ServerDetailPageProps) {
   };
 
   const getToolDescription = (toolName: string) => {
-    // Mock descriptions for tools - in real app this would come from server info
+    // 실제 저장된 도구 정보가 있으면 우선 사용
+    if (server.toolsInfo) {
+      const toolInfo = server.toolsInfo.find(tool => tool.name === toolName);
+      if (toolInfo) {
+        return {
+          description: toolInfo.description,
+          parameters: [] // API에서 매개변수 정보를 제공하지 않는 경우
+        };
+      }
+    }
+    
+    // 저장된 정보가 없으면 Mock descriptions 사용
     const descriptions: Record<string, { description: string; parameters?: string[] }> = {
       'get_mempool_stats': {
         description: '메모리풀의 현재 통계 정보를 조회합니다. 대기 중인 트랜잭션 수, 평균 수수료 등을 확인할 수 있습니다.',

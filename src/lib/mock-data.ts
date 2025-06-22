@@ -13,6 +13,11 @@ let currentMockServers: MCPServer[] = [
     created_at: '2024-01-15T09:00:00Z',
     updated_at: '2024-01-15T09:00:00Z',
     tools: ['execute_query', 'get_schema', 'list_tables'],
+    toolsInfo: [
+      { name: 'execute_query', description: 'PostgreSQL 데이터베이스에서 SQL 쿼리를 실행하고 결과를 반환합니다.' },
+      { name: 'get_schema', description: '데이터베이스의 스키마 정보를 조회하여 테이블 구조와 관계를 확인합니다.' },
+      { name: 'list_tables', description: '데이터베이스에 있는 모든 테이블 목록을 조회합니다.' }
+    ],
     health_url: 'postgresql://localhost:5432/company_db/health'
   },
   {
@@ -171,16 +176,21 @@ export const getMockServers = (): MCPServer[] => {
 
 // 새 서버 추가 함수
 export const addMockServer = (serverData: CreateMCPServerRequest): MCPServer => {
+  // 도구 정보가 있으면 헬스체크를 통과한 것으로 간주하여 'online' 상태로 설정
+  const status = (serverData.tools && serverData.tools.length > 0) ? 'online' : 'unknown';
+  
   const newServer: MCPServer = {
     ...serverData,
     id: generateNextId(),
-    status: 'unknown',
+    status,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
+    // toolsInfo가 있으면 함께 저장
+    ...(serverData.toolsInfo && { toolsInfo: serverData.toolsInfo }),
   };
   
   currentMockServers.push(newServer);
-  console.log(`📝 Mock server added: ${newServer.name} (ID: ${newServer.id})`);
+  console.log(`📝 Mock server added: ${newServer.name} (ID: ${newServer.id}) - Status: ${status}`);
   
   return newServer;
 };

@@ -215,10 +215,15 @@ export const useMCPStore = create<MCPStore>()(
           const servers = getMockServers();
           const newServer = servers[servers.length - 1];
           
-          // 백그라운드에서 서버 정보 업데이트 (비동기)
-          setTimeout(() => {
-            get().updateServerInBackground(newServer.id);
-          }, 100);
+          // 도구 정보가 있으면 이미 헬스체크를 통과한 것으로 간주하여 백그라운드 업데이트 건너뛰기
+          if (!data.tools || data.tools.length === 0) {
+            // 도구 정보가 없는 경우에만 백그라운드에서 서버 정보 업데이트
+            setTimeout(() => {
+              get().updateServerInBackground(newServer.id);
+            }, 100);
+          } else {
+            console.log(`✅ 도구 정보가 있어 헬스체크 건너뛰기: ${newServer.name} (${data.tools.length}개 도구)`);
+          }
           
         } catch (error) {
           set({ error: error instanceof Error ? error.message : 'Failed to create server' });
