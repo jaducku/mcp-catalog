@@ -12,6 +12,7 @@ export interface MCPServer {
   created_at: string;
   updated_at: string;
   tools?: string[];
+  toolsInfo?: MCPToolInfo[]; // 도구 상세 정보
   health_url?: string;
   serverInfo?: {
     name: string;
@@ -21,12 +22,19 @@ export interface MCPServer {
   actualEndpoint?: string; // 리다이렉션이 발생한 경우 실제 작동하는 URL
 }
 
+export interface MCPToolInfo {
+  name: string;
+  description: string;
+}
+
 export interface CreateMCPServerRequest {
   name: string;
   endpoint: string;
   type: ServerType;
   description: string;
   tags: string[];
+  tools?: string[];
+  toolsInfo?: MCPToolInfo[];
 }
 
 export interface MCPServerSearchParams {

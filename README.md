@@ -206,6 +206,7 @@ docker run -p 3000:3000 mcp-catalog
 
 ## 기여하기
 
+<<<<<<< HEAD
 1. Fork the repository
 2. Create a feature branch
 3. Commit your changes
@@ -219,3 +220,6 @@ MIT License
 ## 문제 해결
 
 일반적인 문제와 해결 방법은 [DATABASE_SETUP.md](./DATABASE_SETUP.md)의 트러블슈팅 섹션을 참고하세요.
+=======
+이 프로젝트는 MIT 라이선스 하에 배포됩니다.
+>>>>>>> 6ee7c5f8a3727457b3b5e6a91cb616b5ecb5d71d
