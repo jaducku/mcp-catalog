@@ -198,13 +198,3 @@ npm start
 ## 📄 라이선스
 
 이 프로젝트는 MIT 라이선스 하에 배포됩니다.
-
-## 📞 문의
-
-- **개발팀**: [dev-team@company.com](mailto:dev-team@company.com)
-- **이슈 리포트**: GitHub Issues
-- **문서**: [내부 위키](https://wiki.company.com/mcp-catalog)
-
----
-
-**Made with ❤️ by 개발팀**
