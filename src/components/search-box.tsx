@@ -30,7 +30,7 @@ export function SearchBox() {
         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
         <Input
           type="text"
-          placeholder="MCP 서버 이름, 설명, 태그로 검색..."
+          placeholder="서버 이름, 태그, 설명으로 검색..."
           value={localQuery}
           onChange={(e) => setLocalQuery(e.target.value)}
           className="pl-10 pr-10"

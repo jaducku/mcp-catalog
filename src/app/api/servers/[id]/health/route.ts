@@ -3,15 +3,15 @@ import { getMCPServerService } from '@/lib/services/mcp-server-service';
 import { DatabaseError } from '@/lib/database/types';
 
 interface RouteParams {
-  params: {
+  params: Promise<{
     id: string;
-  };
+  }>;
 }
 
 // POST /api/servers/[id]/health - 서버 헬스체크 및 상태 업데이트
 export async function POST(request: NextRequest, { params }: RouteParams) {
   try {
-    const { id } = params;
+    const { id } = await params;
 
     if (!id) {
       return NextResponse.json({
@@ -41,7 +41,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     });
 
   } catch (error) {
-    console.error(`POST /api/servers/${params.id}/health error:`, error);
+    console.error(`POST /api/servers/[id]/health error:`, error);
     
     const statusCode = error instanceof DatabaseError ? 500 : 500;
     const message = error instanceof DatabaseError 

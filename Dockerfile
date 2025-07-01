@@ -1,119 +1,80 @@
-<<<<<<< HEAD
-# Base image
+# AWS ECS 배포용 최적화된 Dockerfile
 FROM node:18-alpine AS base
 
-# Install dependencies only when needed
+# 보안 업데이트 및 필수 패키지 설치
+RUN apk update && apk upgrade && \
+    apk add --no-cache \
+    libc6-compat \
+    curl \
+    dumb-init && \
+    rm -rf /var/cache/apk/*
+
+# 의존성 설치 단계
 FROM base AS deps
-RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
-# Install dependencies based on the preferred package manager
+# 패키지 파일 복사 및 의존성 설치
 COPY package.json package-lock.json* ./
-RUN npm ci --omit=dev
+RUN npm ci --omit=dev --frozen-lockfile && \
+    npm cache clean --force
 
-# Rebuild the source code only when needed
+# 빌드 단계
 FROM base AS builder
 WORKDIR /app
+
+# 의존성 복사
 COPY --from=deps /app/node_modules ./node_modules
+
+# 소스 코드 복사
 COPY . .
 
-# Next.js collects completely anonymous telemetry data about general usage.
-# Learn more here: https://nextjs.org/telemetry
-# Uncomment the following line in case you want to disable telemetry during the build.
-ENV NEXT_TELEMETRY_DISABLED 1
+# 빌드 환경 변수 설정
+ENV NEXT_TELEMETRY_DISABLED=1
+ENV NODE_ENV=production
 
+# Next.js 빌드
 RUN npm run build
 
-# Production image, copy all the files and run next
+# 운영 이미지
 FROM base AS runner
 WORKDIR /app
 
-ENV NODE_ENV production
-ENV NEXT_TELEMETRY_DISABLED 1
+# 운영 환경 변수 설정
+ENV NODE_ENV=production
+ENV NEXT_TELEMETRY_DISABLED=1
+ENV PORT=3000
+ENV HOSTNAME="0.0.0.0"
 
-RUN addgroup --system --gid 1001 nodejs
-RUN adduser --system --uid 1001 nextjs
-
-COPY --from=builder /app/public ./public
-
-# Set the correct permission for prerender cache
-RUN mkdir .next
-RUN chown nextjs:nodejs .next
-
-# Automatically leverage output traces to reduce image size
-# https://nextjs.org/docs/advanced-features/output-file-tracing
-COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
-COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
-
-USER nextjs
-
-EXPOSE 3000
-
-ENV PORT 3000
-ENV HOSTNAME "0.0.0.0"
-
-=======
-# Multi-stage build for optimized production image
-
-# Stage 1: Dependencies installation
-FROM node:18-alpine AS deps
-RUN apk add --no-cache libc6-compat
-WORKDIR /app
-
-# Copy package files
-COPY package*.json ./
-RUN npm ci --only=production && npm cache clean --force
-
-# Stage 2: Build the application
-FROM node:18-alpine AS builder
-WORKDIR /app
-
-# Copy all files
-COPY . .
-COPY --from=deps /app/node_modules ./node_modules
-
-# Build the application
-RUN npm run build
-
-# Stage 3: Production image
-FROM node:18-alpine AS runner
-WORKDIR /app
-
-# Create non-root user for security
+# 보안을 위한 사용자 생성
 RUN addgroup --system --gid 1001 nodejs && \
     adduser --system --uid 1001 nextjs
 
-# Copy built application
+# 필요한 디렉토리 생성 및 권한 설정
+RUN mkdir -p /app/.next && \
+    chown -R nextjs:nodejs /app
+
+# 빌드된 파일 복사
 COPY --from=builder /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
-# Set environment variables
-ENV NODE_ENV=production
-ENV PORT=3000
-ENV HOSTNAME=0.0.0.0
+# 헬스체크 스크립트 생성
+RUN echo '#!/bin/sh\ncurl -f http://localhost:3000/api/health || exit 1' > /app/healthcheck.sh && \
+    chmod +x /app/healthcheck.sh && \
+    chown nextjs:nodejs /app/healthcheck.sh
 
-# Security: Don't run as root
+# 비특권 사용자로 전환
 USER nextjs
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=3s --start-period=30s --retries=3 \
-  CMD node healthcheck.js || exit 1
-
-# Create health check script
-USER root
-RUN echo 'const http = require("http"); \
-const options = { hostname: "localhost", port: 3000, path: "/", timeout: 2000 }; \
-const req = http.request(options, (res) => { \
-  process.exit(res.statusCode === 200 ? 0 : 1); \
-}); \
-req.on("error", () => process.exit(1)); \
-req.end();' > healthcheck.js
-USER nextjs
-
-# Expose port
+# 포트 노출
 EXPOSE 3000
 
-# Start the application
->>>>>>> 6ee7c5f8a3727457b3b5e6a91cb616b5ecb5d71d
+# 헬스체크 설정 (AWS ECS에서 사용)
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD /app/healthcheck.sh
+
+# 시그널 처리를 위한 dumb-init 사용
+ENTRYPOINT ["dumb-init", "--"]
+
+# 애플리케이션 시작
 CMD ["node", "server.js"] 

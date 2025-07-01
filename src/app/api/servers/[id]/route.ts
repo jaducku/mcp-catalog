@@ -4,15 +4,15 @@ import { DatabaseError } from '@/lib/database/types';
 import { MCPServer } from '@/types/mcp';
 
 interface RouteParams {
-  params: {
+  params: Promise<{
     id: string;
-  };
+  }>;
 }
 
 // GET /api/servers/[id] - 특정 서버 조회
 export async function GET(request: NextRequest, { params }: RouteParams) {
   try {
-    const { id } = params;
+    const { id } = await params;
 
     if (!id) {
       return NextResponse.json({
@@ -37,7 +37,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     });
 
   } catch (error) {
-    console.error(`GET /api/servers/${params.id} error:`, error);
+    console.error(`GET /api/servers/[id] error:`, error);
     
     const statusCode = error instanceof DatabaseError ? 500 : 500;
     const message = error instanceof DatabaseError 
@@ -54,7 +54,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 // PUT /api/servers/[id] - 서버 정보 수정
 export async function PUT(request: NextRequest, { params }: RouteParams) {
   try {
-    const { id } = params;
+    const { id } = await params;
     const body: Partial<MCPServer> = await request.json();
 
     if (!id) {
@@ -65,7 +65,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
     }
 
     // 수정 불가능한 필드 제거
-    const { id: _, created_at, ...updates } = body;
+    const { id: _id, created_at: _created_at, ...updates } = body;
 
     const service = getMCPServerService();
     const updatedServer = await service.updateServer(id, updates);
@@ -77,7 +77,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
     });
 
   } catch (error) {
-    console.error(`PUT /api/servers/${params.id} error:`, error);
+    console.error(`PUT /api/servers/[id] error:`, error);
     
     const statusCode = error instanceof DatabaseError ? 500 : 500;
     const message = error instanceof DatabaseError 
@@ -94,7 +94,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
 // DELETE /api/servers/[id] - 서버 삭제
 export async function DELETE(request: NextRequest, { params }: RouteParams) {
   try {
-    const { id } = params;
+    const { id } = await params;
 
     if (!id) {
       return NextResponse.json({
@@ -122,7 +122,7 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
     });
 
   } catch (error) {
-    console.error(`DELETE /api/servers/${params.id} error:`, error);
+    console.error(`DELETE /api/servers/[id] error:`, error);
     
     const statusCode = error instanceof DatabaseError ? 500 : 500;
     const message = error instanceof DatabaseError 
