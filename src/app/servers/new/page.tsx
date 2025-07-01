@@ -13,7 +13,7 @@ export default function NewServerPage() {
   const router = useRouter();
 
   const handleSuccess = () => {
-    router.push('/');
+    router.push('/catalog');
   };
 
   const handleCancel = () => {

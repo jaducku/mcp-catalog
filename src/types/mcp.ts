@@ -38,7 +38,7 @@ export interface MCPServerSearchParams {
 
 export interface MCPTool {
   name: string;
-  description: string;
+  description?: string;
   parameters?: Record<string, any>;
 }
 

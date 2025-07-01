@@ -1,7 +1,9 @@
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 import { MCPServer, MCPServerSearchParams, CreateMCPServerRequest } from '@/types/mcp';
-import { updateServerInfo } from '@/lib/mcp-client';
+import { getMCPServerService } from '@/lib/services/mcp-server-service';
+import { DatabaseError } from '@/lib/database/types';
+import { fetchServerTools } from '@/lib/mcp-tools-fetcher';
 import { 
   getMockServers, 
   addMockServer, 
@@ -17,6 +19,7 @@ interface MCPStore {
   searchQuery: string;
   selectedServerId: string | null;
   isDrawerOpen: boolean;
+  useMockData: boolean;
   
   // Search & Filter
   searchParams: MCPServerSearchParams;
@@ -33,6 +36,7 @@ interface MCPStore {
   setSearchParams: (params: MCPServerSearchParams) => void;
   setSelectedServerId: (id: string | null) => void;
   setDrawerOpen: (open: boolean) => void;
+  setUseMockData: (useMock: boolean) => void;
   
   // Computed
   updateFilteredServers: () => void;
@@ -57,6 +61,7 @@ export const useMCPStore = create<MCPStore>()(
       searchQuery: '',
       selectedServerId: null,
       isDrawerOpen: false,
+      useMockData: process.env.NEXT_PUBLIC_USE_MOCK_DATA === 'true',
       searchParams: {},
       filteredServers: [],
 
@@ -67,23 +72,37 @@ export const useMCPStore = create<MCPStore>()(
       },
 
       addServer: (server) => {
-        // Mock 데이터에 실제 추가
-        const addedServer = addMockServer(server);
-        
-        // 스토어 상태 업데이트
-        const newServers = [...get().servers, addedServer];
-        set({ servers: newServers });
-        get().updateFilteredServers();
+        if (get().useMockData) {
+          // Mock 데이터에 실제 추가
+          const addedServer = addMockServer(server);
+          
+          // 스토어 상태 업데이트
+          const newServers = [...get().servers, addedServer];
+          set({ servers: newServers });
+          get().updateFilteredServers();
+        } else {
+          // 실제 DB에서는 createServer를 통해 처리
+          console.log('addServer called in DB mode - use createServer instead');
+        }
       },
 
       updateServer: (id, updates) => {
-        // Mock 데이터에서 업데이트
-        const updatedServer = updateMockServer(id, updates);
-        
-        if (updatedServer) {
-          // 스토어 상태 업데이트
+        if (get().useMockData) {
+          // Mock 데이터에서 업데이트
+          const updatedServer = updateMockServer(id, updates);
+          
+          if (updatedServer) {
+            // 스토어 상태 업데이트
+            const servers = get().servers.map(server =>
+              server.id === id ? updatedServer : server
+            );
+            set({ servers });
+            get().updateFilteredServers();
+          }
+        } else {
+          // 실제 DB 모드에서는 서버 목록을 다시 조회하거나 로컬 상태만 업데이트
           const servers = get().servers.map(server =>
-            server.id === id ? updatedServer : server
+            server.id === id ? { ...server, ...updates } : server
           );
           set({ servers });
           get().updateFilteredServers();
@@ -91,14 +110,19 @@ export const useMCPStore = create<MCPStore>()(
       },
 
       removeServer: (id) => {
-        // Mock 데이터에서 삭제
-        const removed = removeMockServer(id);
-        
-        if (removed) {
-          // 스토어 상태 업데이트
-          const servers = get().servers.filter(server => server.id !== id);
-          set({ servers });
-          get().updateFilteredServers();
+        if (get().useMockData) {
+          // Mock 데이터에서 삭제
+          const removed = removeMockServer(id);
+          
+          if (removed) {
+            // 스토어 상태 업데이트
+            const servers = get().servers.filter(server => server.id !== id);
+            set({ servers });
+            get().updateFilteredServers();
+          }
+        } else {
+          // 실제 DB에서는 deleteServer를 통해 처리
+          console.log('removeServer called in DB mode - use deleteServer instead');
         }
       },
 
@@ -119,6 +143,7 @@ export const useMCPStore = create<MCPStore>()(
 
       setSelectedServerId: (selectedServerId) => set({ selectedServerId }),
       setDrawerOpen: (isDrawerOpen) => set({ isDrawerOpen }),
+      setUseMockData: (useMockData) => set({ useMockData }),
 
       // Computed
       updateFilteredServers: () => {
@@ -159,39 +184,22 @@ export const useMCPStore = create<MCPStore>()(
       fetchServers: async () => {
         set({ loading: true, error: null });
         try {
-          // TODO: Implement actual API call to Supabase
-          // const response = await fetch('/api/servers');
-          // const servers = await response.json();
-          
-          // Mock data for now
-          const mockServers: MCPServer[] = [
-            {
-              id: '1',
-              name: 'Mempool WebSocket MCP',
-              endpoint: 'ws://localhost:8080',
-              type: 'streamable',
-              description: '비트코인 네트워크 데이터를 실시간으로 제공하는 MCP 서버',
-              tags: ['bitcoin', 'websocket', 'mempool'],
-              status: 'online',
-              created_at: new Date().toISOString(),
-              updated_at: new Date().toISOString(),
-            },
-            {
-              id: '2',
-              name: 'Supabase MCP Server',
-              endpoint: 'http://localhost:3001',
-              type: 'streamable',
-              description: 'Supabase 데이터베이스 작업을 위한 MCP 서버',
-              tags: ['supabase', 'database', 'postgresql'],
-              status: 'online',
-              created_at: new Date().toISOString(),
-              updated_at: new Date().toISOString(),
-            },
-          ];
-          
-          get().setServers(mockServers);
+          if (get().useMockData) {
+            // Mock 데이터 사용
+            const mockServers = getMockServers();
+            get().setServers(mockServers);
+          } else {
+            // 실제 데이터베이스에서 조회
+            const service = getMCPServerService();
+            const servers = await service.getAllServers();
+            get().setServers(servers);
+          }
         } catch (error) {
-          set({ error: error instanceof Error ? error.message : 'Failed to fetch servers' });
+          console.error('Failed to fetch servers:', error);
+          const errorMessage = error instanceof DatabaseError 
+            ? error.message 
+            : 'Failed to fetch servers';
+          set({ error: errorMessage });
         } finally {
           set({ loading: false });
         }
@@ -200,28 +208,55 @@ export const useMCPStore = create<MCPStore>()(
       createServer: async (data) => {
         set({ loading: true, error: null });
         try {
-          // TODO: Implement actual API call
-          // const response = await fetch('/api/servers', {
-          //   method: 'POST',
-          //   headers: { 'Content-Type': 'application/json' },
-          //   body: JSON.stringify(data),
-          // });
-          // const server = await response.json();
+          console.log('🔧 서버 등록 시작:', data.name);
           
-          // Mock 데이터에 직접 추가 (addServer에서 처리됨)
-          get().addServer(data);
-          
-          // 추가된 서버 ID 찾기 (가장 최근에 추가된 서버)
-          const servers = getMockServers();
-          const newServer = servers[servers.length - 1];
-          
-          // 백그라운드에서 서버 정보 업데이트 (비동기)
-          setTimeout(() => {
-            get().updateServerInBackground(newServer.id);
-          }, 100);
+          if (get().useMockData) {
+            // Mock 데이터 모드
+            const toolsResult = await fetchServerTools(data.endpoint, data.type, 15000);
+            
+            const serverData = {
+              ...data,
+              ...(toolsResult.success && { 
+                tools: toolsResult.toolNames,
+                actualEndpoint: toolsResult.actualEndpoint 
+              })
+            };
+            
+            get().addServer(serverData);
+            
+            const servers = getMockServers();
+            const newServer = servers[servers.length - 1];
+            
+            if (toolsResult.success) {
+              get().updateServer(newServer.id, { 
+                status: 'online',
+                tools: toolsResult.toolNames,
+                ...(toolsResult.actualEndpoint && { actualEndpoint: toolsResult.actualEndpoint })
+              });
+              console.log(`✅ 서버 등록 완료: ${data.name} - ${toolsResult.toolNames.length}개 Tool 등록`);
+            } else {
+              get().updateServer(newServer.id, { status: 'offline' });
+              console.warn(`⚠️ 서버 등록 완료 (연결 실패): ${data.name} - ${toolsResult.error}`);
+            }
+          } else {
+            // 실제 데이터베이스 모드
+            const service = getMCPServerService();
+            const server = await service.createServer(data);
+            
+            // 새로 생성된 서버를 로컬 상태에 추가
+            const newServers = [...get().servers, server];
+            set({ servers: newServers });
+            get().updateFilteredServers();
+            
+            console.log(`✅ 서버 DB 저장 완료: ${data.name}`);
+          }
           
         } catch (error) {
-          set({ error: error instanceof Error ? error.message : 'Failed to create server' });
+          console.error('❌ 서버 등록 실패:', error);
+          const errorMessage = error instanceof DatabaseError 
+            ? error.message 
+            : 'Failed to create server';
+          set({ error: errorMessage });
           throw error;
         } finally {
           set({ loading: false });
@@ -231,12 +266,24 @@ export const useMCPStore = create<MCPStore>()(
       deleteServer: async (id) => {
         set({ loading: true, error: null });
         try {
-          // TODO: Implement actual API call
-          // await fetch(`/api/servers/${id}`, { method: 'DELETE' });
-          
-          get().removeServer(id);
+          if (get().useMockData) {
+            get().removeServer(id);
+          } else {
+            // 실제 데이터베이스에서 삭제
+            const service = getMCPServerService();
+            await service.deleteServer(id);
+            
+            // 로컬 상태에서도 제거
+            const servers = get().servers.filter(server => server.id !== id);
+            set({ servers });
+            get().updateFilteredServers();
+          }
         } catch (error) {
-          set({ error: error instanceof Error ? error.message : 'Failed to delete server' });
+          console.error('❌ 서버 삭제 실패:', error);
+          const errorMessage = error instanceof DatabaseError 
+            ? error.message 
+            : 'Failed to delete server';
+          set({ error: errorMessage });
           throw error;
         } finally {
           set({ loading: false });
@@ -245,9 +292,14 @@ export const useMCPStore = create<MCPStore>()(
 
       // Initialize with mock data
       initializeWithMockData: () => {
-        // Mock 데이터에서 현재 서버 목록 가져오기
-        const mockServers = getMockServers();
-        get().setServers(mockServers);
+        if (get().useMockData) {
+          // Mock 데이터에서 현재 서버 목록 가져오기
+          const mockServers = getMockServers();
+          get().setServers(mockServers);
+        } else {
+          // 실제 DB 모드에서는 fetchServers 호출
+          get().fetchServers();
+        }
       },
 
       // Background Actions
@@ -256,38 +308,97 @@ export const useMCPStore = create<MCPStore>()(
           const server = get().servers.find(s => s.id === serverId);
           if (!server) return;
 
-          console.log(`🔄 Starting background update for server: ${server.name}`);
+          console.log(`🔄 서버 업데이트 시작: ${server.name}`);
           
           // 서버 상태를 "checking"으로 일시 변경
           get().updateServer(serverId, { status: 'unknown' });
           
-          // 백그라운드에서 서버 정보 업데이트
-          const updates = await updateServerInfo(server);
-          
-          // 업데이트된 정보로 서버 정보 갱신
-          get().updateServer(serverId, updates);
-          
-          console.log(`✅ Background update completed for server: ${server.name}`, updates);
-          
-          // 브라우저 환경에서만 toast 표시
-          if (typeof window !== 'undefined') {
-            const { toast } = await import('sonner');
-            const isOnline = updates.status === 'online';
-            const toolsCount = updates.tools?.length || 0;
+          if (get().useMockData) {
+            // Mock 데이터 모드
+            const toolsResult = await fetchServerTools(server.endpoint, server.type, 15000);
             
-            toast.success(
-              `🔍 ${server.name} 헬스체크 완료`,
-              {
-                description: isOnline 
-                  ? `✅ 서버 온라인 • ${toolsCount}개 도구 발견`
-                  : '❌ 서버 접근 불가',
-                duration: 3000,
+            let updates: Partial<MCPServer>;
+            
+            if (toolsResult.success) {
+              updates = {
+                status: 'online' as const,
+                tools: toolsResult.toolNames,
+                updated_at: new Date().toISOString(),
+                ...(toolsResult.actualEndpoint && { actualEndpoint: toolsResult.actualEndpoint })
+              };
+              
+              console.log(`✅ 서버 업데이트 완료: ${server.name} - ${toolsResult.toolNames.length}개 Tool 발견`);
+              
+              // 브라우저 환경에서만 toast 표시
+              if (typeof window !== 'undefined') {
+                const { toast } = await import('sonner');
+                toast.success(
+                  `🔍 ${server.name} 헬스체크 완료`,
+                  {
+                    description: `✅ 서버 온라인 • ${toolsResult.toolNames.length}개 Tool 발견`,
+                    duration: 3000,
+                  }
+                );
               }
-            );
+            } else {
+              updates = {
+                status: 'offline' as const,
+                updated_at: new Date().toISOString()
+              };
+              
+              console.warn(`⚠️ 서버 연결 실패: ${server.name} - ${toolsResult.error}`);
+              
+              // 브라우저 환경에서만 toast 표시
+              if (typeof window !== 'undefined') {
+                const { toast } = await import('sonner');
+                toast.error(
+                  `🔍 ${server.name} 헬스체크 실패`,
+                  {
+                    description: `❌ ${toolsResult.error || '서버에 연결할 수 없습니다'}`,
+                    duration: 4000,
+                  }
+                );
+              }
+            }
+            
+            // 업데이트된 정보로 서버 정보 갱신
+            get().updateServer(serverId, updates);
+          } else {
+            // 실제 데이터베이스 모드
+            const service = getMCPServerService();
+            const updatedServer = await service.updateServerStatus(serverId);
+            
+            // 로컬 상태 업데이트
+            get().updateServer(serverId, updatedServer);
+            
+            // 브라우저 환경에서만 toast 표시
+            if (typeof window !== 'undefined') {
+              const { toast } = await import('sonner');
+              const isOnline = updatedServer.status === 'online';
+              const toolsCount = updatedServer.tools?.length || 0;
+              
+              if (isOnline) {
+                toast.success(
+                  `🔍 ${server.name} 헬스체크 완료`,
+                  {
+                    description: `✅ 서버 온라인 • ${toolsCount}개 Tool 발견`,
+                    duration: 3000,
+                  }
+                );
+              } else {
+                toast.error(
+                  `🔍 ${server.name} 헬스체크 실패`,
+                  {
+                    description: '❌ 서버에 연결할 수 없습니다',
+                    duration: 4000,
+                  }
+                );
+              }
+            }
           }
           
         } catch (error) {
-          console.error(`❌ Background update failed for server ${serverId}:`, error);
+          console.error(`❌ 서버 업데이트 실패: ${serverId}`, error);
           
           // 에러 발생 시 오프라인으로 처리
           get().updateServer(serverId, { 
@@ -303,7 +414,7 @@ export const useMCPStore = create<MCPStore>()(
             toast.error(
               `🔍 ${server?.name || 'Unknown'} 헬스체크 실패`,
               {
-                description: '❌ 서버에 연결할 수 없습니다',
+                description: '❌ 예상치 못한 오류가 발생했습니다',
                 duration: 3000,
               }
             );

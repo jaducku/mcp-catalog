@@ -15,7 +15,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { useMCPStore } from '@/store/mcp-store';
 import { CreateMCPServerRequest, ServerType } from '@/types/mcp';
-import { Loader2, Plus, X } from 'lucide-react';
+import { fetchServerTools } from '@/lib/mcp-tools-fetcher';
+import { Loader2, Plus, X, CheckCircle2, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
 
 const serverRegistrationSchema = z.object({
@@ -45,6 +46,12 @@ export function ServerRegistrationForm({ onSuccess, onCancel }: ServerRegistrati
   const { createServer, loading } = useMCPStore();
   const [tags, setTags] = useState<string[]>([]);
   const [currentTag, setCurrentTag] = useState('');
+  const [isValidating, setIsValidating] = useState(false);
+  const [validationResult, setValidationResult] = useState<{
+    isValid: boolean;
+    tools: string[];
+    error?: string;
+  } | null>(null);
 
   const form = useForm<ServerRegistrationFormData>({
     resolver: zodResolver(serverRegistrationSchema),
@@ -72,8 +79,71 @@ export function ServerRegistrationForm({ onSuccess, onCancel }: ServerRegistrati
     form.setValue('tags', newTags);
   };
 
+  const validateServer = async () => {
+    const endpoint = form.getValues('endpoint');
+    const type = form.getValues('type');
+    
+    if (!endpoint || !type) {
+      toast.error('엔드포인트와 서버 타입을 먼저 입력해주세요.');
+      return;
+    }
+
+    setIsValidating(true);
+    setValidationResult(null);
+
+    try {
+      console.log('🔍 서버 검증 시작:', endpoint);
+      
+      const result = await fetchServerTools(endpoint, type, 10000);
+      
+      if (result.success) {
+        setValidationResult({
+          isValid: true,
+          tools: result.toolNames,
+        });
+        
+        toast.success('✅ 서버 검증 성공!', {
+          description: `${result.toolNames.length}개의 Tool을 발견했습니다.`,
+          duration: 3000,
+        });
+      } else {
+        setValidationResult({
+          isValid: false,
+          tools: [],
+          error: result.error,
+        });
+        
+        toast.error('❌ 서버 검증 실패', {
+          description: result.error || '서버에 연결할 수 없습니다.',
+          duration: 4000,
+        });
+      }
+    } catch (error) {
+      setValidationResult({
+        isValid: false,
+        tools: [],
+        error: error instanceof Error ? error.message : '알 수 없는 오류',
+      });
+      
+      toast.error('❌ 검증 중 오류 발생', {
+        description: error instanceof Error ? error.message : '알 수 없는 오류가 발생했습니다.',
+        duration: 4000,
+      });
+    } finally {
+      setIsValidating(false);
+    }
+  };
+
   const onSubmit = async (data: ServerRegistrationFormData) => {
     try {
+      // 등록 전 자동 Tool 목록 조회
+      toast.info('🔧 서버 등록 중...', {
+        description: 'Tool 목록을 조회하고 있습니다.',
+        duration: 2000,
+      });
+
+      const toolsResult = await fetchServerTools(data.endpoint, data.type, 15000);
+      
       const requestData: CreateMCPServerRequest = {
         ...data,
         tags,
@@ -81,11 +151,18 @@ export function ServerRegistrationForm({ onSuccess, onCancel }: ServerRegistrati
       
       await createServer(requestData);
       
-      // 등록 완료 후 백그라운드 헬스체크 진행 안내
-      toast.success('🎉 MCP 서버가 등록되었습니다!', {
-        description: '백그라운드에서 헬스체크와 도구 목록을 수집하고 있습니다...',
-        duration: 4000,
-      });
+      // 등록 완료 메시지
+      if (toolsResult.success) {
+        toast.success('🎉 MCP 서버가 등록되었습니다!', {
+          description: `${toolsResult.toolNames.length}개의 Tool이 자동으로 등록되었습니다.`,
+          duration: 4000,
+        });
+      } else {
+        toast.success('🎉 MCP 서버가 등록되었습니다!', {
+          description: '백그라운드에서 Tool 목록을 수집하고 있습니다...',
+          duration: 4000,
+        });
+      }
       
       onSuccess();
       
@@ -93,6 +170,7 @@ export function ServerRegistrationForm({ onSuccess, onCancel }: ServerRegistrati
       form.reset();
       setTags([]);
       setCurrentTag('');
+      setValidationResult(null);
     } catch (error) {
       toast.error('서버 등록 중 오류가 발생했습니다.');
       console.error('Failed to create server:', error);
@@ -152,15 +230,89 @@ export function ServerRegistrationForm({ onSuccess, onCancel }: ServerRegistrati
           render={({ field }) => (
             <FormItem>
               <FormLabel>엔드포인트 URL *</FormLabel>
-              <FormControl>
-                <Input 
-                  placeholder="예: https://api.example.com 또는 ws://localhost:8080"
-                  {...field}
-                />
-              </FormControl>
+              <div className="flex gap-2">
+                <FormControl>
+                  <Input 
+                    placeholder="예: https://api.example.com 또는 ws://localhost:8080"
+                    {...field}
+                    onChange={(e) => {
+                      field.onChange(e);
+                      setValidationResult(null); // 입력 변경 시 검증 결과 초기화
+                    }}
+                  />
+                </FormControl>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={validateServer}
+                  disabled={isValidating || !field.value || !form.getValues('type')}
+                  className="whitespace-nowrap"
+                >
+                  {isValidating ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      검증 중...
+                    </>
+                  ) : (
+                    '서버 검증'
+                  )}
+                </Button>
+              </div>
               <FormDescription>
                 HTTP URL (https://) 또는 WebSocket URL (ws://, wss://)을 입력하세요
               </FormDescription>
+              
+              {/* 검증 결과 표시 */}
+              {validationResult && (
+                <div className={`mt-2 p-3 rounded-lg border ${
+                  validationResult.isValid 
+                    ? 'bg-green-50 border-green-200 dark:bg-green-950/20 dark:border-green-800' 
+                    : 'bg-red-50 border-red-200 dark:bg-red-950/20 dark:border-red-800'
+                }`}>
+                  <div className="flex items-start gap-2">
+                    {validationResult.isValid ? (
+                      <CheckCircle2 className="w-5 h-5 text-green-600 dark:text-green-400 mt-0.5 flex-shrink-0" />
+                    ) : (
+                      <AlertCircle className="w-5 h-5 text-red-600 dark:text-red-400 mt-0.5 flex-shrink-0" />
+                    )}
+                    <div className="flex-1">
+                      <p className={`text-sm font-medium ${
+                        validationResult.isValid 
+                          ? 'text-green-800 dark:text-green-200' 
+                          : 'text-red-800 dark:text-red-200'
+                      }`}>
+                        {validationResult.isValid ? '✅ 서버 연결 성공' : '❌ 서버 연결 실패'}
+                      </p>
+                      {validationResult.isValid ? (
+                        <div className="mt-1">
+                          <p className="text-xs text-green-700 dark:text-green-300">
+                            {validationResult.tools.length}개의 Tool 발견
+                          </p>
+                          {validationResult.tools.length > 0 && (
+                            <div className="mt-2 flex flex-wrap gap-1">
+                              {validationResult.tools.slice(0, 5).map((tool) => (
+                                <Badge key={tool} variant="outline" className="text-xs bg-green-100 dark:bg-green-900/30">
+                                  {tool}
+                                </Badge>
+                              ))}
+                              {validationResult.tools.length > 5 && (
+                                <Badge variant="outline" className="text-xs bg-green-100 dark:bg-green-900/30">
+                                  +{validationResult.tools.length - 5}개 더
+                                </Badge>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        <p className="text-xs text-red-700 dark:text-red-300 mt-1">
+                          {validationResult.error}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+              
               <FormMessage />
             </FormItem>
           )}

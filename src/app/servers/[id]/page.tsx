@@ -14,6 +14,7 @@ import { ServerStatusBadge } from '@/components/atoms/server-status-badge';
 import { toast } from 'sonner';
 import { MCPServer } from '@/types/mcp';
 import { ModeToggle } from '@/components/mode-toggle';
+import { getToolDescription } from '@/lib/mock-data';
 
 interface ServerDetailPageProps {
   params: Promise<{
@@ -50,8 +51,8 @@ export default function ServerDetailPage({ params }: ServerDetailPageProps) {
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
           <h1 className="text-2xl font-bold text-foreground mb-4">서버를 찾을 수 없습니다</h1>
-          <Button onClick={() => router.push('/')}>
-            홈으로 돌아가기
+          <Button onClick={() => router.push('/catalog')}>
+            카탈로그로 돌아가기
           </Button>
         </div>
       </div>
@@ -84,60 +85,7 @@ export default function ServerDetailPage({ params }: ServerDetailPageProps) {
     return JSON.stringify(config, null, 4);
   };
 
-  const getToolDescription = (toolName: string) => {
-    // Mock descriptions for tools - in real app this would come from server info
-    const descriptions: Record<string, { description: string; parameters?: string[] }> = {
-      'get_mempool_stats': {
-        description: '메모리풀의 현재 통계 정보를 조회합니다. 대기 중인 트랜잭션 수, 평균 수수료 등을 확인할 수 있습니다.',
-        parameters: ['currency (선택사항): USD, KRW 등 통화 단위']
-      },
-      'get_block_info': {
-        description: '특정 블록의 상세 정보를 조회합니다. 블록 해시, 트랜잭션 목록, 마이닝 정보 등을 제공합니다.',
-        parameters: ['block_height 또는 block_hash: 조회할 블록 식별자']
-      },
-      'get_transaction': {
-        description: '특정 트랜잭션의 상세 정보를 조회합니다. 입력/출력, 수수료, 확인 상태 등을 확인할 수 있습니다.',
-        parameters: ['txid: 트랜잭션 해시 ID']
-      },
-      'search_address': {
-        description: '비트코인 주소의 거래 내역과 잔액을 조회합니다. 주소 유형, 거래 횟수, 현재 잔액 등을 제공합니다.',
-        parameters: ['address: 비트코인 주소', 'limit (선택사항): 조회할 거래 수 제한']
-      },
-      'get_fee_estimates': {
-        description: '현재 네트워크 상황에 따른 수수료 추천값을 제공합니다. 빠름/보통/경제적 옵션별로 제공됩니다.',
-        parameters: ['target_blocks (선택사항): 목표 확인 블록 수']
-      },
-      'list_files': {
-        description: '지정된 디렉토리의 파일과 폴더 목록을 조회합니다. 파일 크기, 수정 날짜 등의 메타데이터도 포함됩니다.',
-        parameters: ['path: 조회할 디렉토리 경로', 'recursive (선택사항): 하위 폴더 포함 여부']
-      },
-      'read_file': {
-        description: '텍스트 파일의 내용을 읽어옵니다. 다양한 인코딩을 지원하며 대용량 파일은 청크 단위로 읽습니다.',
-        parameters: ['file_path: 읽을 파일 경로', 'encoding (선택사항): 파일 인코딩']
-      },
-      'write_file': {
-        description: '파일에 내용을 작성합니다. 기존 파일 덮어쓰기 또는 새 파일 생성이 가능합니다.',
-        parameters: ['file_path: 작성할 파일 경로', 'content: 파일 내용', 'mode (선택사항): 쓰기 모드']
-      },
-      'get_weather': {
-        description: '지정된 지역의 현재 날씨 정보를 조회합니다. 온도, 습도, 풍속, 날씨 상태 등을 제공합니다.',
-        parameters: ['location: 지역명 또는 위도/경도', 'units (선택사항): 온도 단위 (C/F)']
-      },
-      'send_email': {
-        description: '이메일을 발송합니다. HTML 형식 지원, 첨부파일 추가, 예약 발송 등의 기능을 제공합니다.',
-        parameters: ['to: 수신자 이메일', 'subject: 제목', 'body: 본문', 'attachments (선택사항): 첨부파일']
-      },
-      'predict_model': {
-        description: '훈련된 머신러닝 모델을 사용하여 예측을 수행합니다. 다양한 데이터 형식을 지원합니다.',
-        parameters: ['model_name: 사용할 모델명', 'input_data: 예측할 데이터', 'confidence (선택사항): 신뢰도 임계값']
-      }
-    };
-    
-    return descriptions[toolName] || {
-      description: '이 도구에 대한 상세 정보가 아직 제공되지 않습니다. 서버 개발자에게 문의하여 도구 설명을 요청해보세요.',
-      parameters: []
-    };
-  };
+
 
   return (
     <div className="min-h-screen bg-background">
