@@ -210,7 +210,6 @@ export const useMCPStore = create<MCPStore>()(
         try {
           console.log('🔧 서버 등록 시작:', data.name);
           
-<<<<<<< HEAD
           if (get().useMockData) {
             // Mock 데이터 모드
             const toolsResult = await fetchServerTools(data.endpoint, data.type, 15000);
@@ -250,23 +249,6 @@ export const useMCPStore = create<MCPStore>()(
             get().updateFilteredServers();
             
             console.log(`✅ 서버 DB 저장 완료: ${data.name}`);
-=======
-          // Mock 데이터에 직접 추가 (addServer에서 처리됨)
-          get().addServer(data);
-          
-          // 추가된 서버 ID 찾기 (가장 최근에 추가된 서버)
-          const servers = getMockServers();
-          const newServer = servers[servers.length - 1];
-          
-          // 도구 정보가 있으면 이미 헬스체크를 통과한 것으로 간주하여 백그라운드 업데이트 건너뛰기
-          if (!data.tools || data.tools.length === 0) {
-            // 도구 정보가 없는 경우에만 백그라운드에서 서버 정보 업데이트
-            setTimeout(() => {
-              get().updateServerInBackground(newServer.id);
-            }, 100);
-          } else {
-            console.log(`✅ 도구 정보가 있어 헬스체크 건너뛰기: ${newServer.name} (${data.tools.length}개 도구)`);
->>>>>>> 6ee7c5f8a3727457b3b5e6a91cb616b5ecb5d71d
           }
           
         } catch (error) {
