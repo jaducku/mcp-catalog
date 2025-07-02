@@ -39,6 +39,25 @@ cd mcp-catalog
 npm install
 ```
 
+#### 사내 환경에서 Proxy 설정
+
+사내 환경에서 proxy를 사용하는 경우, 다음과 같이 설정하세요:
+
+1. `.npmrc.example` 파일을 `.npmrc`로 복사:
+   ```bash
+   cp .npmrc.example .npmrc
+   ```
+
+2. `.npmrc` 파일에서 proxy 설정을 활성화:
+   ```
+   proxy=http://your-proxy-server:port
+   https-proxy=http://your-proxy-server:port
+   registry=http://your-internal-registry.com/
+   strict-ssl=false
+   ```
+
+**⚠️ 주의**: 사외 빌드 환경에서는 `.npmrc` 파일이 자동으로 제외되어 proxy 설정의 영향을 받지 않습니다.
+
 ### 3. 환경 변수 설정
 
 프로젝트 루트에 `.env.local` 파일을 생성하고 다음 내용을 추가하세요:

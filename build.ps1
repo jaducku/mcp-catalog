@@ -22,11 +22,21 @@ try {
     # Docker 빌드 실행
     Write-Host "🔨 Docker 이미지 빌드 중..." -ForegroundColor Blue
     
+    # 사내 proxy 설정이 빌드에 영향을 주지 않도록 설정
+    $env:HTTP_PROXY = ""
+    $env:HTTPS_PROXY = ""
+    $env:http_proxy = ""
+    $env:https_proxy = ""
+    
     docker build `
         --platform $Platform `
         --tag "$ImageName`:$Tag" `
         --tag "$ImageName`:latest" `
         --no-cache `
+        --build-arg HTTP_PROXY="" `
+        --build-arg HTTPS_PROXY="" `
+        --build-arg http_proxy="" `
+        --build-arg https_proxy="" `
         .
     
     if ($LASTEXITCODE -ne 0) {

@@ -1,0 +1,21 @@
+# NPM 설정 파일 예시
+# 사내 환경에서 사용할 때만 이 파일을 .npmrc로 복사하여 사용하세요
+
+# 사내 proxy 설정 (필요시 주석 해제)
+# proxy=http://your-proxy-server:port
+# https-proxy=http://your-proxy-server:port
+
+# 사내 NPM registry 설정 (필요시 주석 해제)
+# registry=http://your-internal-registry.com/
+
+# SSL 인증서 검증 비활성화 (사내 환경에서만)
+# strict-ssl=false
+
+# 기본 NPM registry (사외 환경)
+registry=https://registry.npmjs.org/
+
+# 캐시 설정
+cache-max=86400000
+
+# 로그 레벨
+loglevel=warn 

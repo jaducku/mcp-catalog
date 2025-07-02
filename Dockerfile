@@ -15,6 +15,13 @@ WORKDIR /app
 
 # 패키지 파일 복사 및 의존성 설치
 COPY package.json package-lock.json* ./
+
+# NPM 설정 초기화 (proxy 설정 무시)
+RUN npm config delete proxy 2>/dev/null || true && \
+    npm config delete https-proxy 2>/dev/null || true && \
+    npm config set registry https://registry.npmjs.org/ && \
+    npm config set strict-ssl true
+
 RUN npm ci --omit=dev --frozen-lockfile && \
     npm cache clean --force
 
@@ -27,6 +34,12 @@ COPY --from=deps /app/node_modules ./node_modules
 
 # 소스 코드 복사
 COPY . .
+
+# NPM 설정 초기화 (빌드 단계에서도 적용)
+RUN npm config delete proxy 2>/dev/null || true && \
+    npm config delete https-proxy 2>/dev/null || true && \
+    npm config set registry https://registry.npmjs.org/ && \
+    npm config set strict-ssl true
 
 # 빌드 환경 변수 설정
 ENV NEXT_TELEMETRY_DISABLED=1

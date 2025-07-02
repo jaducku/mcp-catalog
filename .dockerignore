@@ -21,6 +21,10 @@ out/
 .env*
 !.env.example
 
+# NPM 설정 파일 (사내 proxy 설정 제외)
+.npmrc
+!.npmrc.example
+
 # 개발 도구
 .vscode/
 .idea/

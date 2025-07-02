@@ -25,11 +25,22 @@ start_time=$(date +%s)
 
 # Docker 빌드 실행
 echo -e "${BLUE}🔨 Docker 이미지 빌드 중...${NC}"
+
+# 사내 proxy 설정이 빌드에 영향을 주지 않도록 설정
+export HTTP_PROXY=""
+export HTTPS_PROXY=""
+export http_proxy=""
+export https_proxy=""
+
 docker build \
   --platform ${PLATFORM} \
   --tag ${IMAGE_NAME}:${TAG} \
   --tag ${IMAGE_NAME}:latest \
   --no-cache \
+  --build-arg HTTP_PROXY="" \
+  --build-arg HTTPS_PROXY="" \
+  --build-arg http_proxy="" \
+  --build-arg https_proxy="" \
   .
 
 # 빌드 완료 시간 계산
