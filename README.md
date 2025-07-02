@@ -242,3 +242,6 @@ MIT License
 =======
 이 프로젝트는 MIT 라이선스 하에 배포됩니다.
 >>>>>>> 6ee7c5f8a3727457b3b5e6a91cb616b5ecb5d71d
+
+a : 580075786326
+g : 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
